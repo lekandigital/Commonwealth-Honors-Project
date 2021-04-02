@@ -1,0 +1,3 @@
+[submodule "CameraFeed/Alamofire"]
+	path = CameraFeed/Alamofire
+	url = https://github.com/Alamofire/Alamofire.git
