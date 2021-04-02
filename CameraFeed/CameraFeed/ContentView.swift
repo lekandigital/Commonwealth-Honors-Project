@@ -8,6 +8,9 @@
 import SwiftUI
 import AVFoundation
 
+// send data, when the data updates the text and background updates.
+// hold screen, when the screen is held, the background becomes more translucent.
+
 struct ContentView: View {
     var body: some View {
         
@@ -29,87 +32,77 @@ struct CameraView: View {
     let timerToRetake = Timer.publish(every: 4, on: .current, in: .common).autoconnect()
     let timerToSave = Timer.publish(every: 10, on: .current, in: .common).autoconnect()
     
+    @State var opacityValue = 1.0
+    
+    @GestureState var isDetectingLongPress = false
+    @State var completedLongPress = false
+    
+    var longPress: some Gesture {
+        LongPressGesture(minimumDuration:.infinity, maximumDistance: .infinity)
+            .updating($isDetectingLongPress) { currentState, gestureState,
+                    transaction in
+                gestureState = currentState
+                transaction.animation = Animation.easeIn(duration: 0.25)
+            }
+            .onEnded { finished in
+                self.completedLongPress = finished
+            }
+    }
+
     var body: some View {
         
         ZStack {
-            
-            // Going to Be Camera preview...
-            CameraPreview(camera: camera)
-                .ignoresSafeArea(.all, edges: .all)
-                .onReceive(timerToTake) { time in
-                    camera.takePic()
-                }
-                .onReceive(timerToRetake) { time in
-                    camera.reTake()
-                }
-                .onReceive(timerToSave) { time in
-                    camera.savePic()
-                }
 
-
-            VStack {
-                
-                if camera.isTaken {
-                    
-                    HStack {
-                        
-                        Spacer()
-                        
-                        Button(action: camera.reTake, label: {
-                            
-                            Image(systemName: "arrow.triangle.2.circlepath.camera")
-                                .foregroundColor(.black)
-                                .padding()
-                                .background(Color.white)
-                                .clipShape(Circle())
-
-                        })
-                        .padding(.trailing, 10)
-                    }
-                }
-                
-                Spacer()
-                
-                HStack {
-                    
-                    // if taken showing save and again take button...
-                    
-                    if camera.isTaken {
-                        
-                        Button(action: {if !camera.isSaved{camera.savePic()}}, label: {
-                            Text(camera.isSaved ? "Saved" : "Save")
-                                .foregroundColor(.black)
-                                .fontWeight(.semibold)
-                                .padding(.vertical, 10)
-                                .padding(.horizontal, 20)
-                                .background(Color.white)
-                                .clipShape(Capsule())
-                        })
-                        .padding(.leading)
-                        
-                        Spacer()
-                        
-                    } else {
-                        Button (action: camera.takePic, label: {
+            GeometryReader { geo in
+                ZStack {
                             
                             ZStack {
-                                Circle()
-                                    .fill(Color.white)
-                                    .frame(width: 65, height: 65)
                                 
-                                Circle()
-                                    .stroke(Color.white, lineWidth: 2)
-                                    .frame(width: 75, height: 75)
+                                CameraPreview(camera: camera)
+                                    .ignoresSafeArea(.all, edges: .all)
+    //                                .onReceive(timerToTake) { time in
+    //                                    camera.takePic()
+    //                                }
+    //                                .onReceive(timerToRetake) { time in
+    //                                    camera.reTake()
+    //                                }
+    //                                .onReceive(timerToSave) { time in
+    //                                    camera.savePic()
+    //                                }
                             }
-                        })
-                    }
+
+            
+                    
+                    VStack {
+                    
+                        ZStack {
+                            
+                            Rectangle()
+                                .fill(Color.white)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .ignoresSafeArea(.all, edges: .all)
+                                .opacity(self.isDetectingLongPress ?
+                                            0.5 :
+                                            (self.completedLongPress ? 0.5 : 1.0))
+                            
+                            Text("Loading...")
+                                .font(.system(size: 60))
+                                .opacity(self.isDetectingLongPress ?
+                                            0.0 :
+                                            (self.completedLongPress ? 0.0 : 1.0))
+                        }
+                        
+                    }.frame(maxHeight: .infinity)
+                    .gesture(longPress)
+                    
                 }
-                .frame(height: 75)
+                .onAppear(perform: {
+                    camera.Check()
+                })
             }
         }
-        .onAppear(perform: {
-            camera.Check()
-        })
+        
+        
         
         
     }
@@ -241,8 +234,10 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
         
         let image = UIImage(data: self.picData)!
         
+        let orientedImage = UIImage(cgImage: image.cgImage!, scale: image.scale, orientation: .up)
+        
         // saving Image...
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+        UIImageWriteToSavedPhotosAlbum(orientedImage, nil, nil, nil)
         
         self.isSaved = true
         
@@ -263,7 +258,7 @@ struct CameraPreview: UIViewRepresentable {
         
         camera.preview = AVCaptureVideoPreviewLayer(session: camera.session)
         camera.preview.frame = view.frame
-        
+
         // Your Own Properties
         camera.preview.videoGravity = .resizeAspectFill
         view.layer.addSublayer(camera.preview)
@@ -277,4 +272,5 @@ struct CameraPreview: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {
         
     }
+    
 }
