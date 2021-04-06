@@ -5,11 +5,10 @@
 //  Created by Lekan Adeyeri on 3/27/21.
 //
 
+import Foundation
 import SwiftUI
 import AVFoundation
-
-// send data, when the data updates the text and background updates.
-// hold screen, when the screen is held, the background becomes more translucent.
+import Alamofire
 
 struct ContentView: View {
     var body: some View {
@@ -31,8 +30,6 @@ struct CameraView: View {
     let timerToTake = Timer.publish(every: 3, on: .current, in: .common).autoconnect()
     let timerToRetake = Timer.publish(every: 4, on: .current, in: .common).autoconnect()
     let timerToSave = Timer.publish(every: 10, on: .current, in: .common).autoconnect()
-    
-    @State var opacityValue = 1.0
     
     @GestureState var isDetectingLongPress = false
     @State var completedLongPress = false
@@ -60,23 +57,23 @@ struct CameraView: View {
                                 
                                 CameraPreview(camera: camera)
                                     .ignoresSafeArea(.all, edges: .all)
-    //                                .onReceive(timerToTake) { time in
-    //                                    camera.takePic()
-    //                                }
-    //                                .onReceive(timerToRetake) { time in
-    //                                    camera.reTake()
-    //                                }
-    //                                .onReceive(timerToSave) { time in
-    //                                    camera.savePic()
-    //                                }
+                                    .onReceive(timerToTake) { time in
+                                        camera.takePic()
+                                    }
+                                    .onReceive(timerToRetake) { time in
+                                        camera.reTake()
+                                    }
+                                    .onReceive(timerToSave) { time in
+                                        camera.processPic()
+                                    }
                             }
 
             
                     
                     VStack {
-                    
+
                         ZStack {
-                            
+
                             Rectangle()
                                 .fill(Color.white)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -84,8 +81,8 @@ struct CameraView: View {
                                 .opacity(self.isDetectingLongPress ?
                                             0.5 :
                                             (self.completedLongPress ? 0.5 : 1.0))
-                            
-                            Text("Loading...")
+
+                            Text(camera.emotionString)
                                 .font(.system(size: 60))
                                 .opacity(self.isDetectingLongPress ?
                                             0.0 :
@@ -129,6 +126,8 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
     @Published var isSaved = false
     
     @Published var picData = Data(count: 0)
+    
+    @Published var emotionString = ""
     
     func Check() {
         
@@ -195,7 +194,7 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
         DispatchQueue.global(qos: .background).async {
             self.output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
             // end
-            self.session.stopRunning()
+//            self.session.stopRunning()
             
             DispatchQueue.main.async {
                 withAnimation{self.isTaken.toggle()}
@@ -230,18 +229,64 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
         self.picData = imageData
     }
     
-    func savePic() {
+    func processPic() {
+        
+        let backendURL = "https://fy481d31kk.execute-api.us-east-1.amazonaws.com/testStage/"
         
         let image = UIImage(data: self.picData)!
         
-        let orientedImage = UIImage(cgImage: image.cgImage!, scale: image.scale, orientation: .up)
+        let base64Image = (image.resized(withPercentage: 0.1)!.pngData()!.base64EncodedString())
         
-        // saving Image...
-        UIImageWriteToSavedPhotosAlbum(orientedImage, nil, nil, nil)
+        var someString = ""
+        
+//        let orientedImage = UIImage(cgImage: image.cgImage!, scale: image.scale, orientation: .up)
+//
+//        // saving Image...
+//        UIImageWriteToSavedPhotosAlbum(orientedImage, nil, nil, nil)
+        
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
         
         self.isSaved = true
         
-        print("saved successfully")
+        self.emotionString = "Loading"
+
+        AF.request(backendURL,
+                   method: .post,
+                   parameters: ["imageBase64": base64Image],
+                   encoder: JSONParameterEncoder.default).responseJSON { response in
+                    
+                    let jsonDataString = "["+String(decoding: response.data!, as: UTF8.self)+"]"
+                    
+                    let jsonData = Data(jsonDataString.utf8)
+                    
+                    let decoder = JSONDecoder()
+                    
+                    print(jsonDataString)
+                    
+                    do {
+                        
+                        let dataValues = try decoder.decode([ReturnedDataObject].self, from: jsonData)
+                        print(dataValues[0].data.emotions[0])
+                        self.emotionString = dataValues[0].data.emotions[0].type
+
+                    } catch {
+                        
+                        print("Error")
+                        if error.localizedDescription == "The data couldn’t be read because it is missing." {
+                            print("no emotion")
+                            self.emotionString = "no emotion"
+                            
+                        } else {
+                            print(error)
+                        }
+
+                    }
+
+        }
+        
+//        let str = String(decoding: jsonData, as: UTF8.self)
+//        print(str)
+//
         
     }
 }
@@ -273,4 +318,19 @@ struct CameraPreview: UIViewRepresentable {
         
     }
     
+}
+
+extension UIImage {
+    func resized(withPercentage percentage: CGFloat) -> UIImage? {
+        let canvas = CGSize(width: size.width * percentage, height: size.height * percentage)
+        return UIGraphicsImageRenderer(size: canvas, format: imageRendererFormat).image {
+            _ in draw(in: CGRect(origin: .zero, size: canvas))
+        }
+    }
+    func resized(toWidth width: CGFloat) -> UIImage? {
+        let canvas = CGSize(width: width, height: CGFloat(ceil(width/size.width * size.height)))
+        return UIGraphicsImageRenderer(size: canvas, format: imageRendererFormat).image {
+            _ in draw(in: CGRect(origin: .zero, size: canvas))
+        }
+    }
 }
