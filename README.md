@@ -2,5 +2,12 @@
 
 
 ## Todo
-1. Add Colors: Add colors that correlate with emotion
-2. Add backend to repo
+- add backend to repo
+- create design ideas
+- add line that displays confidence
+- add Colors: Add colors that correlate with emotion
+- organize code into functions
+
+## Completed
+- send data, when the data updates the text and background updates.
+- hold screen, when the screen is held, the background becomes more translucent.
