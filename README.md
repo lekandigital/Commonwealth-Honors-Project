@@ -1,4 +1,4 @@
-# Commonwealth-Honors-Project
+# Commonwealth Honors Project
 
 
 ## Todo
@@ -14,4 +14,4 @@
 
 ## Copyright and license
 
-Commonwealth-Honors-Project is licensed under MIT. Documentation under CC BY 3.0.
+Commonwealth Honors Project is licensed under MIT. Documentation under CC BY 3.0.
