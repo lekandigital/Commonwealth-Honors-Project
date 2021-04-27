@@ -11,3 +11,7 @@
 ## Completed
 - send data, when the data updates the text and background updates.
 - hold screen, when the screen is held, the background becomes more translucent.
+
+## Copyright and license
+
+InjuryEmotion is licensed under MIT. Documentation under CC BY 3.0.
