@@ -1,5 +1,7 @@
 # Commonwealth Honors Project
+Applied computer vision and augmented reality to discern emotions for people with autism.
 
+<img src="Demo_Final.gif"  height="490">  
 
 ## Todo
 - add backend to repo
