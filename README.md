@@ -4,7 +4,6 @@ Applied computer vision and augmented reality to discern emotions for people wit
 <img src="Demo_Final.gif"  height="490">  
 
 ## Todo
-- add backend to repo
 - create design ideas
 - add line that displays confidence
 - add Colors: Add colors that correlate with emotion
