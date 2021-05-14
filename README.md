@@ -3,12 +3,6 @@ Applied computer vision and augmented reality to discern emotions for people wit
 
 <img src="Demo_Final.gif"  height="490">  
 
-## How it works
-1. Captures image from external camera
-2. Converts image to base64 string
-3. Post request via REST to Lambda function outputs emotion object
-4. The emotion string is extracted from emotion object and displayed
-
 ## Todo
 - create design ideas
 - add line that displays confidence
