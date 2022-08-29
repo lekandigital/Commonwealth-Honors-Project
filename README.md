@@ -16,3 +16,6 @@ Applied computer vision and augmented reality to discern emotions for autistic p
 ## Copyright and license
 
 Commonwealth Honors Project is licensed under MIT. Documentation under CC BY 3.0.
+
+## Credit
+Olalekan Adeyeri, Luciene Reyes (PZ '24)
