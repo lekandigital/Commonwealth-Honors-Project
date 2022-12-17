@@ -6,7 +6,7 @@ Applied computer vision and augmented reality to discern emotions for autistic p
 ## Todo
 - create design ideas
 - add line that displays confidence
-- add Colors: Add colors that correlate with emotion
+- add colors: Add colors that correlate with emotion
 - organize code into functions
 
 ## Completed
