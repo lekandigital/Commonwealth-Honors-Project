@@ -16,3 +16,5 @@ Applied computer vision and augmented reality to discern emotions for autistic p
 ## Copyright and license
 
 Commonwealth Honors Project is licensed under MIT. Documentation under CC BY 3.0.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
